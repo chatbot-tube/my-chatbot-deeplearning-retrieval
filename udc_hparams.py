@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import tensorflow as tf
 from collections import namedtuple
 
@@ -25,6 +27,7 @@ tf.flags.DEFINE_string("optimizer", "Adam", "Optimizer Name (Adam, Adagrad, etc)
 
 FLAGS = tf.flags.FLAGS
 
+# namedtuple 是继承自tuple的子类
 HParams = namedtuple(
     "HParams",
     [
@@ -55,3 +58,12 @@ def create_hparams():
         glove_path=FLAGS.glove_path,
         vocab_path=FLAGS.vocab_path,
         rnn_dim=FLAGS.rnn_dim)
+
+
+# def main(unused_argv):
+#     hparams = create_hparams()
+#     print(hparams)
+#
+#
+# if __name__ == "__main__":
+#     tf.app.run()

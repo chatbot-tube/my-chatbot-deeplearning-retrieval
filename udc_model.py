@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import tensorflow as tf
 import sys
 
@@ -38,6 +39,7 @@ def create_model_fn(hparams, model_impl):
                 utterance,
                 utterance_len,
                 targets)
+
             train_op = create_train_op(loss, hparams)
             return probs, loss, train_op
 

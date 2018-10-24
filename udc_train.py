@@ -1,3 +1,4 @@
+#-*- coding:utf-8 -*-
 import os
 import time
 import itertools
@@ -31,16 +32,19 @@ tf.logging.set_verbosity(FLAGS.loglevel)
 
 
 def main(unused_argv):
+
     hparams = udc_hparams.create_hparams()
 
+    # 模型函数
     model_fn = udc_model.create_model_fn(
         hparams,
         model_impl=dual_encoder_model)
 
+    # 构造一个 Estimator 实例
     estimator = tf.contrib.learn.Estimator(
         model_fn=model_fn,
         model_dir=MODEL_DIR,
-        config=tf.contrib.learn.RunConfig())
+        config=tf.contrib.learn.RunConfig()) # 可选配置对象
 
     input_fn_train = udc_inputs.create_input_fn(
         mode=tf.contrib.learn.ModeKeys.TRAIN,

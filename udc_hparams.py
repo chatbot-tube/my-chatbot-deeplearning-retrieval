@@ -63,7 +63,8 @@ def create_hparams():
 # def main(unused_argv):
 #     hparams = create_hparams()
 #     print(hparams)
-#
+#     print(hparams.max_context_len)
+# #
 #
 # if __name__ == "__main__":
 #     tf.app.run()

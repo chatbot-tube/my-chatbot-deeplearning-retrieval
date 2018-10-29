@@ -21,6 +21,7 @@ def create_train_op(loss, hparams):
 
 
 def create_model_fn(hparams, model_impl):
+    # batched features，label，mode
     def model_fn(features, targets, mode):
         context, context_len = get_id_feature(
             features, "context", "context_len", hparams.max_context_len)

@@ -17,7 +17,7 @@ tf.flags.DEFINE_string(
     "Input directory containing original CSV data files (default = './data')")
 
 tf.flags.DEFINE_string(
-    "output_dir", os.path.abspath("./data"),
+    "output_dir", os.path.abspath("../data"),
     "Output directory for TFrEcord files (default = './data')")
 
 FLAGS = tf.flags.FLAGS
@@ -48,6 +48,11 @@ def create_vocab(input_iter, min_frequency):
     Creates and returns a VocabularyProcessor object with the vocabulary
     for the input iterator.
     """
+    # Sentence -> Word ID -> Word Embedding
+
+    # param1 : max_document_length是文档的最大长度。如果文本的长度大于最大长度，那么它会被剪切，反之则用0填充
+    # param2 : min_frequency 词频的最小值，出现次数>最小词频 的词才会被收录到词表中
+    # param4 : tokenizer_fn tokenizer function，讲句子或给定文本格式, token化得函数，可以理解为分词函数
     vocab_processor = tf.contrib.learn.preprocessing.VocabularyProcessor(
         FLAGS.max_sentence_len,
         min_frequency=min_frequency,
@@ -73,7 +78,6 @@ def create_text_sequence_feature(fl, sentence, sentence_len, vocab):
     for word_id in sentence_transformed:
         fl.feature.add().int64_list.value.extend([word_id])
     return fl
-
 
 def create_example_train(row, vocab):
     """
@@ -104,9 +108,13 @@ def create_example_test(row, vocab):
     """
     context, utterance = row[:2]
     distractors = row[2:]
+
     context_len = len(next(vocab._tokenizer([context])))
     utterance_len = len(next(vocab._tokenizer([utterance])))
+
     context_transformed = transform_sentence(context, vocab)
+    # print("============")
+    # print(context_transformed)
     utterance_transformed = transform_sentence(utterance, vocab)
 
     # New Example
@@ -136,6 +144,8 @@ def create_tfrecords_file(input_filename, output_filename, example_fn):
     """
     writer = tf.python_io.TFRecordWriter(output_filename)
     print("Creating TFRecords file at {}...".format(output_filename))
+
+    # enumerate() 函数用于将一个可遍历的数据对象(如列表、元组或字符串)组合为一个索引序列，同时列出数据和数据下标
     for i, row in enumerate(create_csv_iter(input_filename)):
         x = example_fn(row)
         writer.write(x.SerializeToString())
@@ -164,34 +174,37 @@ if __name__ == "__main__":
     input_iter = (x[0] + " " + x[1] for x in input_iter)
 
     # for i in input_iter:
-        # print(i)
+    #     print(i)
+    #     print("--------")
 
     vocab = create_vocab(input_iter, min_frequency=FLAGS.min_word_frequency)
 
     print("Total vocabulary size: {}".format(len(vocab.vocabulary_)))
 
-    # # Create vocabulary.txt file
-    # write_vocabulary(
-    #     vocab, os.path.join(FLAGS.output_dir, "vocabulary.txt"))
-    #
-    # # Save vocab processor
-    # vocab.save(os.path.join(FLAGS.output_dir, "vocab_processor.bin"))
-    #
-    # # Create validation.tfrecords
-    # create_tfrecords_file(
-    #     input_filename=VALIDATION_PATH,
-    #     output_filename=os.path.join(FLAGS.output_dir, "validation.tfrecords"),
-    #     example_fn=functools.partial(create_example_test, vocab=vocab))
-    #
-    # # Create test.tfrecords
-    # create_tfrecords_file(
-    #     input_filename=TEST_PATH,
-    #     output_filename=os.path.join(FLAGS.output_dir, "test.tfrecords"),
-    #     example_fn=functools.partial(create_example_test, vocab=vocab))
-    #
-    # # Create train.tfrecords
-    # create_tfrecords_file(
-    #     input_filename=TRAIN_PATH,
-    #     output_filename=os.path.join(FLAGS.output_dir, "train.tfrecords"),
-    #     example_fn=functools.partial(create_example_train, vocab=vocab))
+    print(vocab)
+
+    # Create vocabulary.txt file
+    write_vocabulary(
+        vocab, os.path.join(FLAGS.output_dir, "vocabulary.txt"))
+
+    # Save vocab processor
+    vocab.save(os.path.join(FLAGS.output_dir, "vocab_processor.bin"))
+
+    # Create validation.tfrecords
+    create_tfrecords_file(
+        input_filename=VALIDATION_PATH,
+        output_filename=os.path.join(FLAGS.output_dir, "validation.tfrecords"),
+        example_fn=functools.partial(create_example_test, vocab=vocab))
+
+    # Create test.tfrecords
+    create_tfrecords_file(
+        input_filename=TEST_PATH,
+        output_filename=os.path.join(FLAGS.output_dir, "test.tfrecords"),
+        example_fn=functools.partial(create_example_test, vocab=vocab))
+
+    # Create train.tfrecords
+    create_tfrecords_file(
+        input_filename=TRAIN_PATH,
+        output_filename=os.path.join(FLAGS.output_dir, "train.tfrecords"),
+        example_fn=functools.partial(create_example_train, vocab=vocab))
     print("run end !")

@@ -1,3 +1,4 @@
+#-*- coding:utf-8 -*-
 import tensorflow as tf
 
 TEXT_FEATURE_SIZE = 160
@@ -32,7 +33,6 @@ def get_feature_columns(mode):
 
 
 def create_input_fn(mode, input_files, batch_size, num_epochs):
-
     # tf.contrib.layers 功能列提供了将数据映射到模型的机制。
     def input_fn():
         features = tf.contrib.layers.create_feature_spec_for_parsing(
@@ -48,7 +48,7 @@ def create_input_fn(mode, input_files, batch_size, num_epochs):
             queue_capacity=200000 + batch_size * 10,
             name="read_batch_features_{}".format(mode))
 
-        # This is an ugly hack because of a current bug in tf.learn
+        # This is an ugly hack(丑陋的做法) because of a current bug in tf.learn
         # During evaluation TF tries to restore the epoch variable which isn't defined during training
         # So we define the variable manually here
         if mode == tf.contrib.learn.ModeKeys.TRAIN:

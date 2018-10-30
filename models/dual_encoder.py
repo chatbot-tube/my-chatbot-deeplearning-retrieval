@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import tensorflow as tf
 import numpy as np
 from models import helpers
@@ -15,6 +17,7 @@ def get_embeddings(hparams):
     else:
         tf.logging.info("No glove/vocab path specificed, starting with random embeddings.")
         initializer = tf.random_uniform_initializer(-0.25, 0.25)
+        # print(initializer)
 
     return tf.get_variable(
         "word_embeddings",
@@ -48,12 +51,15 @@ def dual_encoder_model(
             use_peepholes=True,
             state_is_tuple=True)
 
+        print(context_embedded)
+
         # Run the utterance and context through the RNN
         rnn_outputs, rnn_states = tf.nn.dynamic_rnn(
             cell,
             tf.concat([context_embedded, utterance_embedded], 0),
             sequence_length=tf.concat([context_len, utterance_len], 0),
             dtype=tf.float32)
+
         encoding_context, encoding_utterance = tf.split(rnn_states.h, 2, 0)
 
     with tf.variable_scope("prediction") as vs:
@@ -82,4 +88,37 @@ def dual_encoder_model(
 
     # Mean loss across the batch of examples
     mean_loss = tf.reduce_mean(losses, name="mean_loss")
+
     return probs, mean_loss
+
+'''
+  my test try
+'''
+if __name__ == "__main__":
+
+    import udc_hparams
+    import udc_model
+
+    hparams = udc_hparams.create_hparams()
+
+
+    embeddings_W = get_embeddings(hparams)
+
+    # <tf.Variable 'word_embeddings:0' shape=(91620, 100) dtype=float32_ref>
+    print(embeddings_W)
+
+    import os
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        result2 = sess.run(embeddings_W)
+        print(result2)
+    hparams = udc_hparams.create_hparams()
+
+    # 模型函数
+    model_fn = udc_model.create_model_fn(
+        hparams,
+        model_impl=dual_encoder_model)
+
+    print(model_fn)
